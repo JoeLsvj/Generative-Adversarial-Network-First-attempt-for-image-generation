@@ -136,7 +136,7 @@ class Discriminator(nn.Module):
         # per ridurre la dimensione finale dell'immagine a 512 x 4 x 4
         self.adapool = nn.AdaptiveAvgPool2d((4,4))
 
-        ## a seconda che si usi la BCEWithLogitsLoss o la BCE bisogna aggiungere uno strato di
+        # a seconda che si usi la BCEWithLogitsLoss o la BCE bisogna aggiungere uno strato di
         # normalizzazione tra 0 e 1 finale (e.g. Sigmoid)
         self.predictor = nn.Sequential(
             nn.Linear(512 * 4**2, 4096),
@@ -165,8 +165,7 @@ class Generator(nn.Module):
                     il tempo di apprendimento ed inferenza;
                     non sempre a spazio latente di dimensione maggiore corrisponde ricostruzione migliore
 
-                img_size (int): la dimensione dell'immagine in ingresso (supposta quadrata; a volontà
-                    si può decidere di usare dimensione reali, bisogna modificare un po' di codice)
+                img_size (int): la dimensione dell'immagine in ingresso
 
         '''
         super(Generator, self).__init__()
@@ -208,9 +207,7 @@ class Generator(nn.Module):
             nn.Linear(4096, nz)
         )
 
-        ## in questa rete ho diviso la creazione del vettore latente (parte precedente) e la ricostruzione a partire
-        # dal vettore latente; in questo modo, se volete visualizzarlo o adoperare loss diverse per l'encoder,
-        # potreste farlo senza grosse rivoluzioni al codice
+        # in questa rete ho diviso la creazione del vettore latente (parte precedente) e la ricostruzione a partire dal vettore latente
         self.dec_bottleneck = nn.Sequential(
             nn.Linear(nz, 4096),
             nn.BatchNorm1d(4096),
@@ -218,10 +215,10 @@ class Generator(nn.Module):
             nn.Linear(4096, 512 * 4**2)
         )
 
-        # nota: se usate immagini non multiple di 16, potreste avere problemi
+        # nota: possibili problemi per immagini non multiple di 16
         self.dec_pool = nn.AdaptiveAvgPool2d((img_size //16, img_size //16))
 
-        ## la sequenza di convoluzioni trasposte che ricostruisce l'immagine; nel caso più semplice di GAN,
+        # la sequenza di convoluzioni trasposte che ricostruisce l'immagine; nel caso più semplice di GAN,
         # questa componente e il modulo dec_bottleneck precedente rappresentano l'intero generatore
         self.decoder = nn.Sequential(
             nn.ConvTranspose2d(in_channels=512, out_channels=256, kernel_size=3, stride=2, padding=1, output_padding=1),
@@ -253,7 +250,7 @@ class Generator(nn.Module):
         x = self.encoder(x)
         x = self.enc_pool(x)
         x = x.view(-1, 512 * 4**2)
-        # l'output del modulo successivo è il vettore latente (tipicamente z, se volete portarlo fuori)
+        # l'output del modulo successivo è il vettore latente (z)
         z = self.enc_bottleneck(x)
         x = self.dec_bottleneck(z)
         x = x.view(-1, 512, 4, 4)
